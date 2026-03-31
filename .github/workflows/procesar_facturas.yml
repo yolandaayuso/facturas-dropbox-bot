@@ -6,14 +6,38 @@ on:
     types: [dropbox_invoice]
 
 jobs:
-  prueba:
+  prueba_dropbox:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Probar que el workflow funciona
-        run: echo "Workflow creado correctamente"
+      - name: Obtener access token desde refresh token
+        id: token
+        run: |
+          RESPONSE=$(curl -s -X POST "https://api.dropbox.com/oauth2/token" \
+            -d "grant_type=refresh_token" \
+            -d "refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }}" \
+            -d "client_id=${{ secrets.DROPBOX_APP_KEY }}" \
+            -d "client_secret=${{ secrets.DROPBOX_APP_SECRET }}")
 
-      - name: Comprobar que están los secrets
+          ACCESS_TOKEN=$(python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])" <<< "$RESPONSE")
+          echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Listar raiz de Dropbox de la app
+        run: |
+          curl -X POST "https://api.dropboxapi.com/2/files/list_folder" \
+            --header "Authorization: Bearer ${{ steps.token.outputs.access_token }}" \
+            --header "Content-Type: application/json" \
+            --data "{\"path\": \"\"}"
+
+      - name: Subir archivo de prueba
+        run: |
+          echo "prueba ok" > prueba.txt
+
+          curl -X POST "https://content.dropboxapi.com/2/files/upload" \
+            --header "Authorization: Bearer ${{ steps.token.outputs.access_token }}" \
+            --header "Dropbox-API-Arg: {\"path\": \"/Salidas/prueba_github.txt\", \"mode\": \"overwrite\", \"autorename\": false, \"mute\": true}" \
+            --header "Content-Type: application/octet-stream" \
+            --data-binary @prueba.txt
         env:
           DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
           DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
