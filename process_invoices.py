@@ -125,7 +125,7 @@ def image_to_pdf(image_path, output_pdf):
 
 def run_ocr(input_pdf, output_pdf):
     subprocess.run(
-        ["ocrmypdf", "--skip-text", "--force-ocr", str(input_pdf), str(output_pdf)],
+        ["ocrmypdf", "--skip-text", str(input_pdf), str(output_pdf)],
         check=True
     )
 
