@@ -6,28 +6,35 @@ on:
     types: [dropbox_invoice]
 
 jobs:
-  prueba_dropbox:
+  procesar_facturas:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Obtener access token desde refresh token
-        id: token
-        run: |
-          RESPONSE=$(curl -s -X POST "https://api.dropbox.com/oauth2/token" \
-            -d "grant_type=refresh_token" \
-            -d "refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }}" \
-            -d "client_id=${{ secrets.DROPBOX_APP_KEY }}" \
-            -d "client_secret=${{ secrets.DROPBOX_APP_SECRET }}")
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
 
-          ACCESS_TOKEN=$(python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])" <<< "$RESPONSE")
-          echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: Listar raiz de Dropbox de la app
+      - name: Instalar dependencias del sistema
         run: |
-          curl -X POST "https://api.dropboxapi.com/2/files/list_folder" \
-            --header "Authorization: Bearer ${{ steps.token.outputs.access_token }}" \
-            --header "Content-Type: application/json" \
-            --data "{\"path\": \"\"}"
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr ghostscript qpdf poppler-utils
+
+      - name: Instalar dependencias Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar procesamiento
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+          DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
+        run: |
+          python process_invoices.py
 
       - name: Subir archivo de prueba
         run: |
