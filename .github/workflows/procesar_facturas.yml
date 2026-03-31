@@ -1,0 +1,25 @@
+name: Procesar facturas Dropbox
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [dropbox_invoice]
+
+jobs:
+  prueba:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Probar que el workflow funciona
+        run: echo "Workflow creado correctamente"
+
+      - name: Comprobar que están los secrets
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+          DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
+        run: |
+          if [ -z "$DROPBOX_APP_KEY" ]; then echo "Falta DROPBOX_APP_KEY" && exit 1; fi
+          if [ -z "$DROPBOX_APP_SECRET" ]; then echo "Falta DROPBOX_APP_SECRET" && exit 1; fi
+          if [ -z "$DROPBOX_REFRESH_TOKEN" ]; then echo "Falta DROPBOX_REFRESH_TOKEN" && exit 1; fi
+          echo "Secrets OK"
