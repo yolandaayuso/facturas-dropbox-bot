@@ -32,18 +32,8 @@ jobs:
       - name: Subir archivo de prueba
         run: |
           echo "prueba ok" > prueba.txt
-
           curl -X POST "https://content.dropboxapi.com/2/files/upload" \
             --header "Authorization: Bearer ${{ steps.token.outputs.access_token }}" \
             --header "Dropbox-API-Arg: {\"path\": \"/Salidas/prueba_github.txt\", \"mode\": \"overwrite\", \"autorename\": false, \"mute\": true}" \
             --header "Content-Type: application/octet-stream" \
             --data-binary @prueba.txt
-        env:
-          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
-          DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
-          DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
-        run: |
-          if [ -z "$DROPBOX_APP_KEY" ]; then echo "Falta DROPBOX_APP_KEY" && exit 1; fi
-          if [ -z "$DROPBOX_APP_SECRET" ]; then echo "Falta DROPBOX_APP_SECRET" && exit 1; fi
-          if [ -z "$DROPBOX_REFRESH_TOKEN" ]; then echo "Falta DROPBOX_REFRESH_TOKEN" && exit 1; fi
-          echo "Secrets OK"
